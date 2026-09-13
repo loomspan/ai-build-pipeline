@@ -2,7 +2,7 @@
 
 Work with your AI agent to produce a solid ticket, then automate the development of it.
 
-This repository provides a development process expressed as Markdown command files. You stay closely involved in understanding the problem, choosing the intended outcome, and setting constraints. Once that intent is captured in a self-contained ticket, an AI agent orchestrates research, implementation planning, test planning, implementation, and independent review.
+This repository provides a development process expressed as Markdown command files. You stay closely involved in understanding the problem, choosing the intended outcome, and setting constraints. Once that intent is captured in a self-contained ticket, an AI agent chooses a proportionate execution profile and orchestrates the required work.
 
 The pipeline makes ordinary technical decisions from the ticket and repository evidence. It brings you back in when a material decision cannot be resolved from that evidence. A project-specific **design lens** carries durable decisions into planning and review so the work fits your project.
 
@@ -10,7 +10,7 @@ The pipeline makes ordinary technical decisions from the ticket and repository e
 
 Copy the entire [`ai/`](ai/) directory into the root of your project. Keep its directory structure: the commands refer to shared instructions and artifacts by these paths.
 
-Use an AI coding agent that can read and edit repository files, run your project's build and test commands, and launch subagents in fresh contexts. The automated pipeline also requires continuing the planning agent into test planning in the same context. These files are instructions executed by your agent; this repository does not include a separate executable runner. How you attach or reference files depends on your agent.
+Use an AI coding agent that can read and edit repository files, run your project's build and test commands, and launch subagents in fresh contexts. The full profile also requires continuing the planning agent into test planning in the same context. These files are instructions executed by your agent; this repository does not include a separate executable runner. How you attach or reference files depends on your agent.
 
 Before your first ticket, work with your agent to customize [`ai/thoughts/design-lens.md`](ai/thoughts/design-lens.md). It is fine to leave it empty when there are no durable project-specific decisions to record.
 
@@ -24,7 +24,7 @@ When you are ready, ask:
 Use ai/commands/write_ticket.md to write a ticket from this conversation.
 ```
 
-[`write_ticket.md`](ai/commands/write_ticket.md) captures the outcome, requirements, and observable acceptance criteria under `ai/thoughts/tickets/`. It preserves settled decisions without requiring the next session to recover them from chat. It also distinguishes binding constraints from suggestions that planning can reconsider.
+[`write_ticket.md`](ai/commands/write_ticket.md) captures the outcome, requirements, observable acceptance criteria, and an advisory full, fast-track, or direct execution-profile recommendation under `ai/thoughts/tickets/`. It preserves settled decisions without requiring the next session to recover them from chat. It also distinguishes binding constraints from suggestions that planning can reconsider.
 
 Read the resulting ticket. It should express what you agreed to build and why, with enough context for an agent that has never seen the conversation. Generating the ticket does not start implementation.
 
@@ -37,25 +37,56 @@ Use ai/commands/0_run_pipeline.md to implement ticket
 @ai/thoughts/tickets/2026-09-06-example-feature.md
 ```
 
-Replace the example with your actual ticket path, using your agent's file-reference syntax. The orchestrator runs the stages and passes artifact paths between agents. Answer any material questions it raises; otherwise, it continues through implementation and review.
+Replace the example with your actual ticket path, using your agent's file-reference syntax. The orchestrator first performs a bounded, read-only current-checkout triage. By default it recommends a profile and waits for your choice before starting expensive work. You may explicitly request `full`, `fast-track`, or `direct` to skip that confirmation when triage finds the choice safe.
 
-At the end, you receive the artifact paths, review disposition and count, developer decisions, verification results, and any optional developer checks. Completion means a fresh reviewer found no actionable issues and performed sufficient verification. Committing, opening a pull request, and deployment are outside the defined pipeline stages.
+- **Full** runs research, planning/testing, implementation, and independent review.
+- **Fast track** uses the ticket for targeted implementation and then performs an independent review.
+- **Direct** uses the ticket for implementation and proportionate verification without a separate review.
+
+The orchestrator pauses and recommends an upgrade when new evidence makes a
+lighter route unsuitable, including during review fixes. It proceeds under
+the upgraded route after you choose it, without redundant confirmation. A full
+upgrade runs research and planning before returning to implementation; a
+direct-to-fast-track upgrade adds independent review. Existing work is
+preserved. It never silently downgrades an explicitly requested profile.
+
+At the end, you receive the selected profile, triage rationale, artifact paths, review disposition when applicable, developer decisions, verification results, and optional developer checks. Full and fast-track completion means a fresh reviewer found no actionable issues and performed sufficient verification. Direct completion is explicitly reported as having no independent review. Committing, opening a pull request, and deployment are outside the defined pipeline stages.
 
 ## How the pipeline works
+
+Step 0 is a bounded profile gate, not a research stage. Beyond the ticket,
+required policies, and Git summaries, it uses at most two locator searches and
+five targeted file reads. If material uncertainty remains, it recommends full
+instead of expanding the investigation. It makes no edits and runs no tests.
+An explicit full request needs no extra research to justify the choice.
+
+The shared protocol owns the profile eligibility table; the orchestrator owns
+selection. Triage includes outstanding verification and review of ticket changes
+already in the checkout, so a trivial last edit cannot make a substantial
+unreviewed change eligible for direct. Unrelated dirty developer changes are
+excluded and preserved. Legacy tickets without a recommendation remain valid.
 
 | Stage | Responsibility | Result |
 | --- | --- | --- |
 | [1. Research](ai/commands/1_research_codebase.md) | Trace existing behavior, relevant code, tests, dependencies, and history. | Evidence-backed research document. |
 | [2. Implementation plan](ai/commands/2_create_plan.md) | Choose an approach, apply project guardrails, assess impacts, and map acceptance criteria to code and tests. | Concrete implementation plan with phases and verification. |
 | [3. Testing plan](ai/commands/3_testing_plan.md) | Define regression coverage, failing tests where applicable, safe commands, and exit criteria. | Testing plan grounded in the project's existing tools. |
-| [4. Implementation](ai/commands/4_implement_plan.md) | Implement the plans, run verification, and update completion checkboxes using actual evidence. | Code, tests, supporting changes, and verification results. |
+| [4. Implementation](ai/commands/4_implement_plan.md) | Implement the plans, or a ticket-led fast/direct change, and run verification. | Code, tests, supporting changes, and verification results. |
 | [5. Independent review](ai/commands/5_code_review.md) | Reconstruct the change, check correctness and requirements, fix actionable issues, and verify again. | Numbered review document and disposition. |
 
-Research, planning, implementation, and each independent review begin in fresh contexts. Implementation planning and test planning deliberately share one context so the test strategy builds on the design decisions and risks just established.
+In the full profile, research, planning, implementation, and each independent review begin in fresh contexts. Implementation planning and test planning deliberately share one context so the test strategy builds on the design decisions and risks just established. Fast track starts implementation and review in separate fresh contexts; direct runs only implementation.
 
-**Artifact files carry knowledge across context boundaries.** Important decisions belong in the research, plans, ticket, or implementation. Chat summaries are short receipts. The [orchestrator](ai/commands/0_run_pipeline.md) checks that required artifacts exist and contain substantive content before advancing.
+**Artifact files carry knowledge across context boundaries.** Important decisions
+belong in the ticket, artifacts produced by the selected route, or the
+implementation. Ticket-led execution uses a concise `Execution notes` section
+in the existing ticket for material decisions, developer answers, scope
+attribution, and observations needed later. Checklists stay internal; no
+substitute plans are required. Notes preserve context without authorizing a
+future run or supplying prior review conclusions. Chat summaries are receipts.
+The [orchestrator](ai/commands/0_run_pipeline.md) checks that artifacts required
+by the selected route exist and contain substantive content before advancing.
 
-### Review continues until a fresh context is clean
+### Full and fast-track review continues until a fresh context is clean
 
 A review agent completes its initial review before editing. If it finds actionable issues, it applies safe fixes within scope and re-reviews until it believes the work is clean. Because it changed the work, it returns `fixes-applied`, and the orchestrator starts another fresh reviewer.
 
@@ -116,13 +147,17 @@ Keep entries specific and explain why they matter. Good candidates include who m
 | Ticket `Pipeline notes` | A narrow intentional exception or constraint a later stage might otherwise misunderstand. |
 | Research and plans | Discovered evidence, implementation choices, risks, and verification details. |
 
-Planning reads the lens directly and records applicable guardrails. Test planning and implementation carry them forward from the plan. Independent review reads the lens again and checks conformance. Research documents the current codebase; it does not currently have an explicit instruction to apply the lens.
+Planning and ticket-led implementation read the lens directly. Test planning
+and plan-led implementation carry its decisions forward from the plan.
+Independent review reads the lens again and checks conformance. Research
+documents the current codebase; it does not currently have an explicit
+instruction to apply the lens.
 
 Keep the lens current as the project evolves. Explain the scope and exceptions of each decision so agents can exercise judgment, and revisit entries when experience changes the project's needs. If you change the lens's filename or location, update the command references too.
 
 ## Artifacts you can inspect
 
-The commands write their outputs under `ai/thoughts/`, using the ticket filename stem to keep related work together:
+The full profile writes its outputs under `ai/thoughts/`, using the ticket filename stem to keep related work together:
 
 ```text
 ai/thoughts/
@@ -135,7 +170,14 @@ ai/thoughts/
   reviews/<ticket-stem>-review-2.md
 ```
 
-The research records source evidence and repository state. The plans connect acceptance criteria to implementation and executable verification. Review documents record findings, resolved issues, conformance, verification, and residual risks. These files make the development process inspectable after the agent session ends.
+The research records source evidence and repository state. The plans connect
+acceptance criteria to implementation and executable verification. Review
+documents record findings, resolved issues, conformance, verification, and
+residual risks. Fast-track adds review artifacts and direct adds no separate
+process document; both preserve material execution context in the existing
+ticket. Final reports identify the actual verification source: the final fresh
+review for full/fast-track, or Step 4 for direct. Stopped runs identify their
+last stage and any pending profile choice.
 
 ## Origins and attribution
 

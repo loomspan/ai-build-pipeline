@@ -1,5 +1,5 @@
 ---
-description: Write a self-contained ticket for the five-step development pipeline
+description: Write a self-contained ticket with an advisory execution profile
 ---
 
 # Write Ticket
@@ -43,7 +43,34 @@ Add `Context` when links, source examples, dependencies, scope exclusions, or ba
 
 Interpret `Pipeline notes` narrowly: they authorize only the stated exception, never broader scope, reduced correctness, weaker security, or inadequate verification. Omit the section when there is no genuine exception.
 
+## Execution Profile Recommendation
+
+Record an advisory execution profile using the context already developed in the
+conversation. Preserve the ticket author's understanding of intent and risk
+without turning ticket writing into repository research:
+
+Read the `Execution Profiles` eligibility table in
+`ai/commands/shared/automation-protocol.md` and apply it only to the
+conversational knowledge already available. Reading that process definition
+does not call for source inspection. Full retains research and planning;
+fast-track uses ticket-led implementation plus independent review; direct
+omits independent review and is eligible only when every direct condition
+is supported by the known intent and risk.
+
+Add an `Execution profile` section containing `Recommended`, `Confidence`, a
+short intent-based `Rationale`, and any `Reassessment triggers`. Use confidence
+`high`, `medium`, or `low`. This is advisory: `0_run_pipeline.md` validates the
+recommendation against the current checkout before expensive work begins. Do
+not perform new codebase research only to increase confidence; when the
+conversation does not establish enough, recommend `full` with low confidence.
+The recommendation controls process only; it never waives ticket requirements,
+correctness, verification, or a review explicitly required by the ticket.
+
 ## What Later Steps Discover
+
+The full route assigns the responsibilities below. Light routes move necessary
+targeted investigation and verification into Step 4 without requiring skipped
+artifacts; fast-track retains Step 5.
 
 - Step 1 finds current code, data flow, tests, fixtures, integrations, configuration, and history.
 - Step 2 selects implementation details, assesses impacts and risks, and writes the plan.
@@ -76,6 +103,14 @@ Source paths, line numbers, test names, and commands belong in a ticket only whe
 
 <External work-item reference, background, dependencies, scope exclusions, or helpful nonbinding hints. Omit when unnecessary.>
 
+## Execution profile
+
+- **Recommended:** full | fast-track | direct
+- **Confidence:** high | medium | low
+- **Rationale:** <Why the known intent and risk support this profile.>
+- **Reassessment triggers:** <Current-checkout discoveries that should change
+  the profile, or `none`.>
+
 ## Pipeline notes
 
 - <Intentional exception likely to look accidental. Omit when none.>
@@ -93,8 +128,12 @@ Before saving, confirm:
 - consequential behavior and unusual risks are explicit;
 - important data, security, compatibility, and deployment expectations are stated when material;
 - known dependencies and sequencing constraints are recorded;
+- the ticket contains an advisory execution profile, confidence, rationale, and
+  reassessment triggers without claiming unverified repository state;
 - no later stage must recover unique intent or background from chat;
 - acceptance criteria describe outcomes rather than implementation steps; and
 - no research or coding is prescribed unless it captures an agreed constraint.
 
-If the check passes, report the exact ticket path and that it is pipeline-ready. Create only the ticket; do not start the pipeline unless the developer also asked for it.
+If the check passes, report the exact ticket path, recommended execution
+profile, and that it is pipeline-ready. Create only the ticket; do not start the
+pipeline unless the developer also asked for it.

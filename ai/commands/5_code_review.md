@@ -24,7 +24,12 @@ Review the current ticket-scoped change as an independent engineer. Find concret
 
 ## Inputs and Scope
 
-Read the ticket, research, implementation plan, testing plan, repository instructions, and relevant source completely. Do not read prior review documents in pipeline mode; every review cycle must form an independent judgment from the current repository.
+Read every supplied ticket, research, implementation-plan, and testing-plan
+artifact, plus repository instructions and relevant source, completely. A plan
+and research artifact are helpful context, not prerequisites; never require
+artifacts skipped by an approved fast-track route. Do not read prior review
+documents in pipeline mode; every review cycle must form an independent
+judgment from the current repository.
 
 Establish scope using:
 
@@ -134,10 +139,17 @@ Each finding must include priority, imperative title, exact file/line anchor, fa
 
 In standalone review-only mode, do not edit implementation files unless the developer explicitly asked for fixes. Write findings and report `clean` only when none are actionable.
 
-In pipeline mode:
+In pipeline mode, apply the shared profile reassessment rule to the reviewed
+change and before implementing fixes. Use the selected profile supplied by the
+orchestrator. If a fast-track review discovers a full-profile trigger, return
+`STATUS: needs-developer` with the evidence and proposed upgrade before
+affected fixes or completion, even when the fix is clear and in scope.
+
+For each review/fix cycle:
 
 1. Complete the full review before editing.
-2. Fix every safe, in-scope actionable finding, including tests.
+2. Fix every safe, in-scope actionable finding, including tests, using Step 4's
+   mismatch and verification discipline and preserving unrelated developer work.
 3. Re-run relevant verification and review the complete diff again.
 4. Repeat internally until no actionable findings remain, or return `needs-developer` for a material decision.
 5. Return `REVIEW_RESULT: fixes-applied` if this context changed any implementation artifact. The orchestrator must launch another fresh step-5 context.
@@ -185,10 +197,13 @@ Use `No actionable findings.` when clean.
 ## Residual Risks and Optional Developer Checks
 
 ## Disposition
-- `clean` or `fixes-applied`
+- `clean`, `fixes-applied`, `needs-developer`, or `failed`
 ```
 
-End with the Step Report. Keep chat output a concise receipt; the review artifact contains the evidence. A `clean` result requires no open findings of any priority.
+End with the Step Report. Keep chat output a concise receipt; the review artifact
+contains the evidence. A `clean` result requires no open findings of any
+priority. For a stopped review, explain the decision or failure in the artifact
+and omit `REVIEW_RESULT` from the Step Report until Step 5 is complete.
 
 ## Final Review Check
 
