@@ -39,9 +39,14 @@ Use ai/commands/0_run_pipeline.md to implement ticket
 
 Replace the example with your actual ticket path, using your agent's file-reference syntax. The orchestrator first performs a bounded, read-only current-checkout triage. By default it recommends a profile and waits for your choice before starting expensive work. You may explicitly request `full`, `fast-track`, or `direct` to skip that confirmation when triage finds the choice safe.
 
-- **Full** runs research, planning/testing, implementation, and independent review.
-- **Fast track** uses the ticket for targeted implementation and then performs an independent review.
-- **Direct** uses the ticket for implementation and proportionate verification without a separate review.
+- **Full 5-Step Pipeline** (`full`) runs research, implementation planning, test planning, implementation and verification, and independent review.
+- **Fast-Track 2-Step Pipeline — Implementation & Review** (`fast-track`) uses the ticket for targeted implementation and verification, then performs an independent review.
+- **Direct Implementation — No Independent Review** (`direct`) uses the ticket for implementation and proportionate verification without a separate review.
+
+Recommendations and confirmation prompts use these descriptive labels. Step
+counts exclude Step 0 triage; the full route counts implementation planning and
+test planning separately even though they share a context. Command values remain
+`full`, `fast-track`, and `direct`.
 
 The orchestrator pauses and recommends an upgrade when new evidence makes a
 lighter route unsuitable, including during review fixes. It proceeds under
